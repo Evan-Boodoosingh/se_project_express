@@ -25,7 +25,9 @@ const createUser = (req, res) => {
   // Hash the password before saving
   bcrypt
     .hash(password, 10)
-    .then((hashedPassword) => User.create({ name, avatar, email, password: hashedPassword }))
+    .then((hashedPassword) =>
+      User.create({ name, avatar, email, password: hashedPassword })
+    )
     .then((user) => {
       // Remove password from response (select: false doesn't apply to create operations)
       const userResponse = user.toObject();
