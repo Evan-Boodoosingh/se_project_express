@@ -50,7 +50,14 @@ const createUser = (req, res) => {
 
 const getCurrentUser = (req, res) => {
   const userId = req.user._id;
-  User.findById(userId)
+
+  if (!userId) {
+    return res.status(ValidationError).send({
+      message: "User ID is required",
+    });
+  }
+
+  return User.findById(userId)
     .orFail()
     .then((user) => res.status(200).send(user))
     .catch((err) => {
@@ -105,7 +112,13 @@ const updateUser = (req, res) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
 
-  User.findByIdAndUpdate(
+  if (!userId) {
+    return res.status(ValidationError).send({
+      message: "User ID is required",
+    });
+  }
+
+  return User.findByIdAndUpdate(
     userId,
     { name, avatar },
     { new: true, runValidators: true }
