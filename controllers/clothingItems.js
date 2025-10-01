@@ -16,29 +16,25 @@ const getItems = (req, res) => {
 
 const createItem = (req, res) => {
   const owner = req.user._id;
-  const { name, weather, imageURL, imageUrl } = req.body;
+  const { name, weather, imageUrl } = req.body;
 
   // Accept both imageURL and imageUrl field names
-  const finalImageURL = imageURL || imageUrl;
-  const usedImageUrlField = imageURL ? "imageURL" : "imageUrl";
+  // const finalImageURL = imageURL || imageUrl;
+  // const usedImageUrlField = imageURL ? "imageURL" : "imageUrl";
 
   // Debug: log what we're trying to create
-  console.log("Creating item with:", {
-    name,
-    weather,
-    imageURL: finalImageURL,
-    owner,
-  });
+  // console.log("Creating item with:", {
+  //   name,
+  //   weather,
+  //   imageURL: finalImageURL,
+  //   owner,
+  // });
 
-  ClothingItem.create({ name, weather, imageURL: finalImageURL, owner })
+  ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => {
       // Convert response to match the field name that was sent
-      const responseItem = item.toObject();
-      if (usedImageUrlField === "imageUrl") {
-        responseItem.imageUrl = responseItem.imageURL;
-        delete responseItem.imageURL;
-      }
-      res.status(201).send(responseItem);
+
+      res.status(201).send(item);
     })
     .catch((err) => {
       console.error("Full error:", err);
