@@ -10,14 +10,13 @@ const {
   InternalServerError,
 } = require("../utils/errors");
 
-const getUsers = (req, res) => {
+const getUsers = (req, res) =>
   User.find({})
     .then((users) => res.status(200).send(users))
     .catch((err) => {
       console.error(err);
       return res.status(InternalServerError).send({ message: err.message });
     });
-};
 
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
@@ -32,7 +31,7 @@ const createUser = (req, res) => {
       // Remove password from response (select: false doesn't apply to create operations)
       const userResponse = user.toObject();
       delete userResponse.password;
-      res.status(201).send(userResponse);
+      return res.status(201).send(userResponse);
     })
     .catch((err) => {
       console.error(err);
