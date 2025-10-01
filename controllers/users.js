@@ -74,6 +74,18 @@ const getCurrentUser = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
+  // Validate required fields
+  if (!email) {
+    return res.status(ValidationError).send({
+      message: 'The "email" field must be filled in',
+    });
+  }
+  if (!password) {
+    return res.status(ValidationError).send({
+      message: 'The "password" field must be filled in',
+    });
+  }
+
   User.findUserByCredentials(email, password)
     .then((user) => {
       // Create JWT token that expires in 7 days
