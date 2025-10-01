@@ -16,14 +16,38 @@ const getItems = (req, res) => {
 
 const createItem = (req, res) => {
   const owner = req.user._id;
-  const { name, weather, imageURL } = req.body;
+  const { name, weather, imageURL, imageUrl } = req.body;
 
-  ClothingItem.create({ name, weather, imageURL, owner })
-    .then((item) => res.status(201).send(item))
+  // Accept both imageURL and imageUrl field names
+  const finalImageURL = imageURL || imageUrl;
+  const usedImageUrlField = imageURL ? "imageURL" : "imageUrl";
+
+  // Debug: log what we're trying to create
+  console.log("Creating item with:", {
+    name,
+    weather,
+    imageURL: finalImageURL,
+    owner,
+  });
+
+  ClothingItem.create({ name, weather, imageURL: finalImageURL, owner })
+    .then((item) => {
+      // Convert response to match the field name that was sent
+      const responseItem = item.toObject();
+      if (usedImageUrlField === "imageUrl") {
+        responseItem.imageUrl = responseItem.imageURL;
+        delete responseItem.imageURL;
+      }
+      res.status(201).send(responseItem);
+    })
     .catch((err) => {
-      console.error(err);
+      console.error("Full error:", err);
       if (err.name === "ValidationError") {
-        return res.status(ValidationError).send({ message: err.message });
+        const errors = Object.values(err.errors).map((error) => error.message);
+        console.log("Validation errors:", errors);
+        return res.status(ValidationError).send({
+          message: `Validation failed: ${errors.join(", ")}`,
+        });
       }
       return res.status(InternalServerError).send({ message: err.message });
     });
@@ -69,7 +93,7 @@ const updateItem = (req, res, method) => {
     })
     .catch((err) => {
       console.error(err);
-      if (err.statusCode === "DocumentNotFoundError") {
+      if (err.statusCode === DocumentNotFoundError) {
         res.status(DocumentNotFoundError).send({ message: err.message });
       } else if (err.name === "CastError") {
         res.status(ValidationError).send({ message: "Invalid item ID" });
