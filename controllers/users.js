@@ -1,4 +1,3 @@
-const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
@@ -26,9 +25,7 @@ const createUser = (req, res) => {
   // Hash the password before saving
   bcrypt
     .hash(password, 10)
-    .then((hashedPassword) => {
-      return User.create({ name, avatar, email, password: hashedPassword });
-    })
+    .then((hashedPassword) => User.create({ name, avatar, email, password: hashedPassword }))
     .then((user) => {
       // Remove password from response (select: false doesn't apply to create operations)
       const userResponse = user.toObject();
@@ -54,17 +51,15 @@ const getCurrentUser = (req, res) => {
   const userId = req.user._id;
   User.findById(userId)
     .orFail()
-    .then((user) => {
-      // Password is automatically excluded due to select: false
-      return res.status(200).send(user);
-    })
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
       console.error(err);
       if (err.name === "DocumentNotFoundError") {
         return res
           .status(DocumentNotFoundError)
           .send({ message: "User not found" });
-      } else if (err.name === "CastError") {
+      }
+      if (err.name === "CastError") {
         return res.status(ValidationError).send({ message: "Invalid user ID" });
       }
       return res.status(InternalServerError).send({ message: err.message });
@@ -86,13 +81,13 @@ const login = (req, res) => {
     });
   }
 
-  User.findUserByCredentials(email, password)
+  return User.findUserByCredentials(email, password)
     .then((user) => {
       // Create JWT token that expires in 7 days
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      res.send({ token });
+      return res.send({ token });
     })
     .catch((err) => {
       console.error(err);
@@ -115,19 +110,18 @@ const updateUser = (req, res) => {
     { new: true, runValidators: true }
   )
     .orFail()
-    .then((user) => {
-      // Password is automatically excluded due to select: false
-      return res.status(200).send(user);
-    })
+    .then((user) => res.status(200).send(user))
     .catch((err) => {
       console.error(err);
       if (err.name === "DocumentNotFoundError") {
         return res
           .status(DocumentNotFoundError)
           .send({ message: "User not found" });
-      } else if (err.name === "ValidationError") {
+      }
+      if (err.name === "ValidationError") {
         return res.status(ValidationError).send({ message: err.message });
-      } else if (err.name === "CastError") {
+      }
+      if (err.name === "CastError") {
         return res.status(ValidationError).send({ message: "Invalid user ID" });
       }
       return res.status(InternalServerError).send({ message: err.message });
