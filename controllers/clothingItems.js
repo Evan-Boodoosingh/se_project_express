@@ -2,6 +2,7 @@ const ClothingItem = require("../models/clothingItem");
 const {
   DocumentNotFoundError,
   ValidationError,
+  ForbiddenError,
   InternalServerError,
 } = require("../utils/errors");
 
@@ -51,13 +52,24 @@ const createItem = (req, res) => {
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
+  const userId = req.user._id;
+
   ClothingItem.findById(itemId)
     .orFail(() => {
       const error = new Error("Item not found");
       error.statusCode = DocumentNotFoundError;
       throw error;
     })
-    .then((item) => ClothingItem.deleteOne(item).then(() => res.send(item)))
+    .then((item) => {
+      // Check if the current user is the owner of the item
+      if (item.owner.toString() !== userId) {
+        return res.status(ForbiddenError).send({
+          message: "You can only delete your own items",
+        });
+      }
+
+      return ClothingItem.deleteOne(item).then(() => res.send(item));
+    })
     .catch((err) => {
       console.error(err);
       if (err.statusCode === DocumentNotFoundError) {
