@@ -4,21 +4,21 @@ const userRouter = require("./users");
 const clothingItemsRouter = require("./clothingItems");
 const { login, createUser } = require("../controllers/users");
 const auth = require("../middlewares/auth");
+const {
+  validateAuthentication,
+  validateUserBody,
+} = require("../middlewares/validation");
 
-const { DocumentNotFoundError } = require("../utils/errors");
+const { NotFoundErrorClass } = require("../utils/errors");
 
-// Public routes (no authentication required)
-router.post("/signin", login);
-router.post("/signup", createUser);
+router.post("/signin", validateAuthentication, login);
+router.post("/signup", validateUserBody, createUser);
 
-// Items and users routes (some protected, handled in their respective routers)
 router.use("/items", clothingItemsRouter);
-router.use("/users", auth, userRouter); // All user routes need auth
+router.use("/users", auth, userRouter);
 
-router.use((req, res) => {
-  res
-    .status(DocumentNotFoundError)
-    .send({ message: "Request resource not found" });
+router.use((req, res, next) => {
+  next(new NotFoundErrorClass("Request resource not found"));
 });
 
 module.exports = router;

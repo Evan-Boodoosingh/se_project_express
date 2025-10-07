@@ -1,88 +1,44 @@
 const ClothingItem = require("../models/clothingItem");
 const {
-  DocumentNotFoundError,
-  ValidationError,
-  ForbiddenError,
-  InternalServerError,
+  DocumentNotFoundErrorClass,
+  NotFoundErrorClass,
+  ForbiddenErrorClass,
 } = require("../utils/errors");
 
-const getItems = (req, res) => {
+const getItems = (req, res, next) => {
   ClothingItem.find({})
     .then((items) => res.status(200).send(items))
-    .catch((err) => {
-      console.error(err);
-      return res.status(InternalServerError).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const createItem = (req, res) => {
+const createItem = (req, res, next) => {
   const owner = req.user._id;
   const { name, weather, imageUrl } = req.body;
 
-  // Accept both imageURL and imageUrl field names
-  // const finalImageURL = imageURL || imageUrl;
-  // const usedImageUrlField = imageURL ? "imageURL" : "imageUrl";
-
-  // Debug: log what we're trying to create
-  // console.log("Creating item with:", {
-  //   name,
-  //   weather,
-  //   imageURL: finalImageURL,
-  //   owner,
-  // });
-
   ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => {
-      // Convert response to match the field name that was sent
-
       res.status(201).send(item);
     })
-    .catch((err) => {
-      console.error("Full error:", err);
-      if (err.name === "ValidationError") {
-        const errors = Object.values(err.errors).map((error) => error.message);
-        console.log("Validation errors:", errors);
-        return res.status(ValidationError).send({
-          message: `Validation failed: ${errors.join(", ")}`,
-        });
-      }
-      return res.status(InternalServerError).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const deleteItem = (req, res) => {
+const deleteItem = (req, res, next) => {
   const { itemId } = req.params;
   const userId = req.user._id;
 
   ClothingItem.findById(itemId)
-    .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = DocumentNotFoundError;
-      throw error;
-    })
+    .orFail(() => new NotFoundErrorClass("Item not found"))
     .then((item) => {
-      // Check if the current user is the owner of the item
       if (item.owner.toString() !== userId) {
-        return res.status(ForbiddenError).send({
-          message: "You can only delete your own items",
-        });
+        throw new ForbiddenErrorClass("You can only delete your own items");
       }
 
       return ClothingItem.deleteOne(item).then(() => res.send(item));
     })
-    .catch((err) => {
-      console.error(err);
-      if (err.statusCode === DocumentNotFoundError) {
-        res.status(DocumentNotFoundError).send({ message: err.message });
-      } else if (err.name === "CastError") {
-        res.status(ValidationError).send({ message: "Invalid item ID" });
-      } else {
-        res.status(InternalServerError).send({ message: err.message });
-      }
-    });
+    .catch(next);
 };
 
-const updateItem = (req, res, method) => {
+const updateItem = (req, res, next, method) => {
   const {
     params: { itemId },
   } = req;
@@ -91,32 +47,19 @@ const updateItem = (req, res, method) => {
     { [method]: { likes: req.user._id } },
     { new: true }
   )
-    .orFail(() => {
-      const error = new Error("Item not found");
-      error.statusCode = DocumentNotFoundError;
-      throw error;
-    })
+    .orFail(() => new NotFoundErrorClass("Item not found"))
     .then((item) => {
       res.send(item);
     })
-    .catch((err) => {
-      console.error(err);
-      if (err.statusCode === DocumentNotFoundError) {
-        res.status(DocumentNotFoundError).send({ message: err.message });
-      } else if (err.name === "CastError") {
-        res.status(ValidationError).send({ message: "Invalid item ID" });
-      } else {
-        res.status(InternalServerError).send({ message: err.message });
-      }
-    });
+    .catch(next);
 };
 
-const likeItem = (req, res) => {
-  updateItem(req, res, "$addToSet");
+const likeItem = (req, res, next) => {
+  updateItem(req, res, next, "$addToSet");
 };
 
-const unlikeItem = (req, res) => {
-  updateItem(req, res, "$pull");
+const unlikeItem = (req, res, next) => {
+  updateItem(req, res, next, "$pull");
 };
 
 module.exports = { getItems, createItem, deleteItem, likeItem, unlikeItem };

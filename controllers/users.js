@@ -3,119 +3,89 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const { JWT_SECRET } = require("../utils/config");
 const {
-  DocumentNotFoundError,
-  ValidationError,
-  UnauthorizedError,
-  ConflictError,
-  InternalServerError,
+  DocumentNotFoundErrorClass,
+  NotFoundErrorClass,
+  ConflictErrorClass,
+  UnauthorizedErrorClass,
 } = require("../utils/errors");
 
-const getUsers = (req, res) =>
+const getUsers = (req, res, next) =>
   User.find({})
     .then((users) => res.status(200).send(users))
-    .catch((err) => {
-      console.error(err);
-      return res.status(InternalServerError).send({ message: err.message });
-    });
+    .catch(next);
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
-  // Hash the password before saving
   bcrypt
     .hash(password, 10)
     .then((hashedPassword) =>
       User.create({ name, avatar, email, password: hashedPassword })
     )
     .then((user) => {
-      // Remove password from response (select: false doesn't apply to create operations)
       const userResponse = user.toObject();
       delete userResponse.password;
       return res.status(201).send(userResponse);
     })
     .catch((err) => {
-      console.error(err);
       if (err.code === 11000) {
-        // Duplicate email error
-        return res.status(ConflictError).send({
-          message: "An account with this email already exists",
-        });
+        next(
+          new ConflictErrorClass("An account with this email already exists")
+        );
+      } else {
+        next(err);
       }
-      if (err.name === "ValidationError") {
-        return res.status(ValidationError).send({ message: err.message });
-      }
-      return res.status(InternalServerError).send({ message: err.message });
     });
 };
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   const userId = req.user._id;
 
   if (!userId) {
-    return res.status(ValidationError).send({
-      message: "User ID is required",
-    });
+    return next(new DocumentNotFoundErrorClass("User ID is required"));
   }
 
   return User.findById(userId)
-    .orFail()
+    .orFail(() => new NotFoundErrorClass("User not found"))
     .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(DocumentNotFoundError)
-          .send({ message: "User not found" });
-      }
-      if (err.name === "CastError") {
-        return res.status(ValidationError).send({ message: "Invalid user ID" });
-      }
-      return res.status(InternalServerError).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  // Validate required fields
   if (!email) {
-    return res.status(ValidationError).send({
-      message: 'The "email" field must be filled in',
-    });
+    return next(
+      new DocumentNotFoundErrorClass('The "email" field must be filled in')
+    );
   }
   if (!password) {
-    return res.status(ValidationError).send({
-      message: 'The "password" field must be filled in',
-    });
+    return next(
+      new DocumentNotFoundErrorClass('The "password" field must be filled in')
+    );
   }
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      // Create JWT token that expires in 7 days
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
       return res.send({ token });
     })
     .catch((err) => {
-      console.error(err);
       if (err.message === "Incorrect email or password") {
-        return res.status(UnauthorizedError).send({
-          message: "Incorrect email or password",
-        });
+        return next(new UnauthorizedErrorClass("Incorrect email or password"));
       }
-      return res.status(InternalServerError).send({ message: err.message });
+      return next(err);
     });
 };
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
 
   if (!userId) {
-    return res.status(ValidationError).send({
-      message: "User ID is required",
-    });
+    return next(new DocumentNotFoundErrorClass("User ID is required"));
   }
 
   return User.findByIdAndUpdate(
@@ -123,23 +93,9 @@ const updateUser = (req, res) => {
     { name, avatar },
     { new: true, runValidators: true }
   )
-    .orFail()
+    .orFail(() => new NotFoundErrorClass("User not found"))
     .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "DocumentNotFoundError") {
-        return res
-          .status(DocumentNotFoundError)
-          .send({ message: "User not found" });
-      }
-      if (err.name === "ValidationError") {
-        return res.status(ValidationError).send({ message: err.message });
-      }
-      if (err.name === "CastError") {
-        return res.status(ValidationError).send({ message: "Invalid user ID" });
-      }
-      return res.status(InternalServerError).send({ message: err.message });
-    });
+    .catch(next);
 };
 
 module.exports = { getUsers, createUser, getCurrentUser, login, updateUser };
