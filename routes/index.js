@@ -23,7 +23,7 @@ router.use("/items", clothingItemsRouter);
 router.use("/users", auth, userRouter);
 
 router.use((req, res, next) => {
-  next(new NotFoundErrorClass("Request resource not found"));
+  next(NotFoundErrorClass("Request resource not found"));
 });
 
 module.exports = router;

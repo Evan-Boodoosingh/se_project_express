@@ -3,9 +3,9 @@ const expressWinston = require("express-winston");
 
 const messageFormat = winston.format.combine(
   winston.format.timestamp(),
-  winston.format.printf(({ timestamp, level, meta, message }) => {
-    return `${timestamp} ${level}: ${meta.error?.stack || message}`;
-  })
+  winston.format.printf(({ timestamp, level, meta, message }) =>
+    `${timestamp} ${level}: ${meta.error?.stack || message}`
+  )
 );
 
 const requestLogger = expressWinston.logger({
@@ -22,7 +22,7 @@ const requestLogger = expressWinston.logger({
   msg: "HTTP {{req.method}} {{req.url}}",
   expressFormat: true,
   colorize: false,
-  ignoreRoute(req, res) {
+  ignoreRoute(_req, _res) {
     return false;
   },
 });

@@ -5,53 +5,32 @@ const ForbiddenError = 403;
 const ConflictError = 409;
 const InternalServerError = 500;
 
-class DocumentNotFoundErrorClass extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "DocumentNotFoundError";
-    this.statusCode = 404;
-  }
-}
+// Factory function that creates custom error objects
+const createError = (message, statusCode, name) => {
+  const error = new Error(message);
+  error.name = name;
+  error.statusCode = statusCode;
+  return error;
+};
 
-class UnauthorizedErrorClass extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "UnauthorizedError";
-    this.statusCode = 401;
-  }
-}
+// Specific error factory functions
+const DocumentNotFoundErrorClass = (message) =>
+  createError(message, 404, "DocumentNotFoundError");
 
-class ForbiddenErrorClass extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ForbiddenError";
-    this.statusCode = 403;
-  }
-}
+const UnauthorizedErrorClass = (message) =>
+  createError(message, 401, "UnauthorizedError");
 
-class NotFoundErrorClass extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "NotFoundError";
-    this.statusCode = 404;
-  }
-}
+const ForbiddenErrorClass = (message) =>
+  createError(message, 403, "ForbiddenError");
 
-class ConflictErrorClass extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ConflictError";
-    this.statusCode = 409;
-  }
-}
+const NotFoundErrorClass = (message) =>
+  createError(message, 404, "NotFoundError");
 
-class InternalServerErrorClass extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "InternalServerError";
-    this.statusCode = 500;
-  }
-}
+const ConflictErrorClass = (message) =>
+  createError(message, 409, "ConflictError");
+
+const InternalServerErrorClass = (message) =>
+  createError(message, 500, "InternalServerError");
 
 module.exports = {
   DocumentNotFoundError,
@@ -66,4 +45,5 @@ module.exports = {
   NotFoundErrorClass,
   ConflictErrorClass,
   InternalServerErrorClass,
+  createError,
 };

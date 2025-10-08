@@ -1,6 +1,5 @@
 const ClothingItem = require("../models/clothingItem");
 const {
-  DocumentNotFoundErrorClass,
   NotFoundErrorClass,
   ForbiddenErrorClass,
 } = require("../utils/errors");
@@ -27,10 +26,10 @@ const deleteItem = (req, res, next) => {
   const userId = req.user._id;
 
   ClothingItem.findById(itemId)
-    .orFail(() => new NotFoundErrorClass("Item not found"))
+    .orFail(() => NotFoundErrorClass("Item not found"))
     .then((item) => {
       if (item.owner.toString() !== userId) {
-        throw new ForbiddenErrorClass("You can only delete your own items");
+        throw ForbiddenErrorClass("You can only delete your own items");
       }
 
       return ClothingItem.deleteOne(item).then(() => res.send(item));
@@ -47,7 +46,7 @@ const updateItem = (req, res, next, method) => {
     { [method]: { likes: req.user._id } },
     { new: true }
   )
-    .orFail(() => new NotFoundErrorClass("Item not found"))
+    .orFail(() => NotFoundErrorClass("Item not found"))
     .then((item) => {
       res.send(item);
     })
