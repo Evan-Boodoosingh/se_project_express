@@ -23,9 +23,6 @@ const requestLogger = expressWinston.logger({
   msg: "HTTP {{req.method}} {{req.url}}",
   expressFormat: true,
   colorize: false,
-  ignoreRoute(_req, _res) {
-    return false;
-  },
 });
 
 const errorLogger = expressWinston.errorLogger({
