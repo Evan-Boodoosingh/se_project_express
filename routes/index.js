@@ -11,6 +11,11 @@ const {
 
 const { NotFoundErrorClass } = require("../utils/errors");
 
+// Health check route
+router.get("/", (req, res) => {
+  res.json({ message: "WTWR API is running", status: "ok" });
+});
+
 router.post("/signin", validateAuthentication, login);
 router.post("/signup", validateUserBody, createUser);
 
