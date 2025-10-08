@@ -29,9 +29,7 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        next(
-          ConflictErrorClass("An account with this email already exists")
-        );
+        next(ConflictErrorClass("An account with this email already exists"));
       } else {
         next(err);
       }

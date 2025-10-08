@@ -1,8 +1,5 @@
 const ClothingItem = require("../models/clothingItem");
-const {
-  NotFoundErrorClass,
-  ForbiddenErrorClass,
-} = require("../utils/errors");
+const { NotFoundErrorClass, ForbiddenErrorClass } = require("../utils/errors");
 
 const getItems = (req, res, next) => {
   ClothingItem.find({})
