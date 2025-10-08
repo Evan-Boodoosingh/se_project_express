@@ -14,6 +14,10 @@ A robust Express.js backend API for the WTWR (What to Wear) application. This se
 - **Frontend**: [se_project_react](https://github.com/Evan-Boodoosingh/se_project_react.git) - React frontend application
 - **Backend**: This repository - Express.js backend with MongoDB
 
+## 🎥 Project Pitch Video
+
+Check out [this video](https://www.loom.com/share/99eab244e924443a9f59934b2480be95?sid=496eac4b-cfd3-4fbb-b350-af5ed646c749), where I describe my project and some challenges I faced while building it.
+
 ## 🚀 Features
 
 ### 🔐 Authentication & Security
@@ -230,7 +234,7 @@ npm install --production
 pm2 restart wtwr-api
 ```
 
-Built with ❤️ using Node.js and Expresshat to Wear?): Back End
+Built with ❤️ using Node.js and Expresshat to Wear?: Back End
 The back-end project is focused on creating a server for the WTWR application. You’ll gain a deeper understanding of how to work with databases, set up security and testing, and deploy web applications on a remote machine. The eventual goal is to create a server with an API and user authorization.
 
 ## Running the Project
